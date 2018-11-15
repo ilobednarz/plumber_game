@@ -20,15 +20,28 @@ Then clone this repository:
 
 ### Start game
 
-Execute script:
+Go to cloned repository directory
 
 ```cd plumber_game```
+
+Execute script:
 
 ```python3 play.py```
 
 
 ## Instructions
 
+### English version
+
+
+
+## Instrukcja
+
+### Wersja polska
+
+Gra polega na wcieleniu się w rolę hydraulika i ustawieniu rur w taki sposób, aby woda mogła swobodnie przepłynąć od kurka do kranu.
+
+Na początku widzimy ekran startowy, gdzie mamy możliwość rozpoczęcia gry lub wyjścia, za pomocą odpowiednich przycisków. Mamy również możliwość wyłączenia dźwięku. 
 
 
 
@@ -91,7 +104,6 @@ https://openclipart.org/detail/215306/water-coloured
 author: frankes
 
 licence: Creative Commons Zero 1.0 Public Domain License
-
 
 * cactus
 
