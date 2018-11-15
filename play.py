@@ -14,7 +14,9 @@ BACKGROUND = pygame.transform.scale(BACKGROUND, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 ANIMATION_FPS = 100 # miliseconds
 
-MAX_LEVEL = 3 # number of available levels
+MAX_LEVEL = len(os.listdir('levels')) # number of available levels
+
+SOUND = True
 
 
 ############### classes ##############
@@ -70,6 +72,9 @@ class Pipe:
 
     def rotate(self):
         """Rotates pipe by 90 degrees clockwise"""
+        if SOUND:
+            CL_SOUND.play()
+
         old = [self.up, self.right, self.down, self.left]
         new = [0, 0, 0, 0]
         for i in range(4):
@@ -122,6 +127,8 @@ class Wheel:
         """Spins wheel and fills starting pipe with water"""
         if self.rotated:
             return
+        if SOUND:
+            pygame.mixer.Sound('sounds/wheel_sound.ogg').play()
         screen = pygame.display.get_surface()
         screen.blit(BACKGROUND, (self.x, self.y), area = self.rect)
         screen.blit(self.image_rotated, (self.x, self.y))
@@ -205,11 +212,11 @@ class Tap:
 
 class Button:
     """Text button to click"""
-    def __init__(self, x, y, text):
+    def __init__(self, x, y, text, text_color = 'Black', font_size = 100):
         self.x = int(x)
         self.y = int(y)
-        font = pygame.font.Font(None, 100)
-        self.text_surface = font.render(text, True, pygame.Color('Black'))
+        font = pygame.font.Font(None, font_size)
+        self.text_surface = font.render(text, True, pygame.Color(text_color))
         self.rect = self.text_surface.get_rect(topleft = (self.x, self.y))
         screen = pygame.display.get_surface()
         screen.blit(self.text_surface, self.rect)
@@ -365,6 +372,50 @@ def start_water(wheel, obj_clickable, tap, plant):
     return False
 
 
+def settings_bar(moves = False):
+    """Returns sound on/off button and optionally prints moves count"""
+
+    screen = pygame.display.get_surface()
+
+    if moves:
+        pygame.draw.rect(screen, (84, 48, 5), pygame.Rect(SCREEN_WIDTH/3 * 2, 0, SCREEN_WIDTH, 55))
+        Button(SCREEN_WIDTH/3 * 2 + 15, 15, 'Moves: 0', 'White', 40)
+    else:
+        pygame.draw.rect(screen, (84, 48, 5), pygame.Rect(SCREEN_WIDTH/6 * 5 - 50, 0, SCREEN_WIDTH/6 + 50, 55))
+
+    if SOUND:
+        sound_button = Button(SCREEN_WIDTH/6 * 5, 15, 'Sound ON', 'White', 40)
+    else:
+        sound_button = Button(SCREEN_WIDTH/6 * 5, 15, 'Sound OFF', 'White', 40)
+
+    return sound_button
+
+
+def add_move(moves_count):
+    screen = pygame.display.get_surface()
+    pygame.draw.rect(screen, (84, 48, 5), pygame.Rect(SCREEN_WIDTH/3 * 2, 0, SCREEN_WIDTH/3/2, 55))
+    Button(SCREEN_WIDTH/3 * 2 + 15, 15, 'Moves: ' + str(moves_count), 'White', 40)
+
+
+def sound_on_off():
+    global SOUND
+    screen = pygame.display.get_surface()
+
+    if SOUND:
+        pygame.mixer.music.stop()
+        SOUND = False
+        pygame.draw.rect(screen, (84, 48, 5), pygame.Rect(SCREEN_WIDTH/6 * 5 - 50, 0, SCREEN_WIDTH/6 + 50, 55))
+        Button(SCREEN_WIDTH/6 * 5, 15, 'Sound OFF', 'White', 40)
+
+    else:
+        pygame.mixer.music.play(-1)
+        SOUND = True
+        pygame.draw.rect(screen, (84, 48, 5), pygame.Rect(SCREEN_WIDTH/6 * 5 - 50, 0, SCREEN_WIDTH/6 + 50, 55))
+        Button(SCREEN_WIDTH/6 * 5, 15, 'Sound ON', 'White', 40)
+
+    pygame.display.flip()
+
+
 ################### screens #####################
 
 def play_level(nr):
@@ -374,16 +425,15 @@ def play_level(nr):
     screen = pygame.display.get_surface()
     screen.blit(BACKGROUND, (0,0))
     obj_clickable, tap, plant = load_level(nr)
+    sound_button = settings_bar(True)
     pygame.display.flip() # refresh display
 
     # test
     # pygame.time.wait(ANIMATION_FPS * 15)
     # return True
-    # end test
 
     # variables
-    moves = 0
-    can_click = True
+    moves_count = 0
 
     # main loop
     running = True
@@ -392,13 +442,18 @@ def play_level(nr):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-            elif can_click and event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN:
                 mx, my = pygame.mouse.get_pos()
+
+                if sound_button.rect.collidepoint(mx, my):
+                    sound_on_off()
+
                 for obj in obj_clickable:
                     if obj.rect.collidepoint(mx, my):
                         if isinstance(obj, Pipe):
+                            moves_count += 1
+                            add_move(moves_count)
                             obj.rotate()
-                            moves += 1
                             break
                         elif isinstance(obj, Wheel):
                             can_click = False
@@ -412,6 +467,10 @@ def play_level(nr):
 def start_screen():
     """Returns boolean - start game or quit"""
 
+    # music
+    pygame.mixer.music.load('sounds/forest.ogg')
+    pygame.mixer.music.play(-1)
+
     # add background and buttons
     screen = pygame.display.get_surface()
     screen.fill((254, 196, 79))
@@ -419,6 +478,8 @@ def start_screen():
     font = pygame.font.Font(None, 200)
     hello = font.render('PLUMBER GAME', True, pygame.Color('Black'))
     screen.blit(hello, hello.get_rect(center = (SCREEN_WIDTH/2, 150)))
+
+    sound_button = settings_bar()
 
     start_button = Button(SCREEN_WIDTH/5, SCREEN_HEIGHT/3*2, "PLAY")
     quit_button = Button(SCREEN_WIDTH/5 * 3, SCREEN_HEIGHT/3*2, "QUIT")
@@ -434,7 +495,9 @@ def start_screen():
                 quit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mx, my = pygame.mouse.get_pos()
-                if start_button.rect.collidepoint(mx, my):
+                if sound_button.rect.collidepoint(mx, my):
+                    sound_on_off()
+                elif start_button.rect.collidepoint(mx, my):
                     return True
                 elif quit_button.rect.collidepoint(mx, my):
                     return False
@@ -450,6 +513,8 @@ def winning_screen():
     font = pygame.font.Font(None, 200)
     you_win = font.render('CONGRATULATIONS!', True, pygame.Color('Black'))
     screen.blit(you_win, you_win.get_rect(center = (SCREEN_WIDTH/2, 150)))
+
+    sound_button = settings_bar()
 
     next_level = Button(SCREEN_WIDTH/5, SCREEN_HEIGHT/3*2, "NEXT LEVEL")
     quit = Button(SCREEN_WIDTH/5 * 3, SCREEN_HEIGHT/3*2, "QUIT")
@@ -469,6 +534,8 @@ def winning_screen():
                     return True
                 elif quit.rect.collidepoint(mx, my):
                     return False
+                elif sound_button.rect.collidepoint(mx, my):
+                    sound_on_off()
 
 
 def losing_screen():
@@ -479,6 +546,8 @@ def losing_screen():
     font = pygame.font.Font(None, 200)
     you_lost = font.render('YOU LOST :(', True, pygame.Color('Black'))
     screen.blit(you_lost, you_lost.get_rect(center = (SCREEN_WIDTH/2, 150)))
+
+    sound_button = settings_bar()
 
     try_again = Button(SCREEN_WIDTH/5, SCREEN_HEIGHT/3*2, "TRY AGAIN")
     quit = Button(SCREEN_WIDTH/5 * 3, SCREEN_HEIGHT/3*2, "QUIT")
@@ -498,6 +567,8 @@ def losing_screen():
                     return True
                 elif quit.rect.collidepoint(mx, my):
                     return False
+                elif sound_button.rect.collidepoint(mx, my):
+                    sound_on_off()
 
 
 def trophy_screen():
@@ -515,6 +586,8 @@ def trophy_screen():
     hello2 = font2.render('You finished all levels.', True, pygame.Color('Black'))
     screen.blit(hello2, hello2.get_rect(center = (SCREEN_WIDTH/2, 210)))
 
+    sound_button = settings_bar()
+
     trophy = load_image('pics/trophy.png')
     rect = trophy.get_rect(center = (SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 130))
     screen = pygame.display.get_surface()
@@ -530,8 +603,11 @@ def trophy_screen():
                 pygame.quit()
                 quit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                return
-
+                mx, my = pygame.mouse.get_pos()
+                if sound_button.rect.collidepoint(mx, my):
+                    sound_on_off()
+                else:
+                    return
 
 def main():
 
@@ -543,6 +619,9 @@ def main():
     pygame.display.set_caption('Plumber')
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
+    global CL_SOUND
+    CL_SOUND = pygame.mixer.Sound('sounds/pipe_click.ogg')
+
     # start screen
     start_game = start_screen()
     if not start_game:
@@ -551,7 +630,7 @@ def main():
 
     # levels and winning/losing screens
     i = 1
-    while(1 <= MAX_LEVEL):
+    while 1 <= MAX_LEVEL:
 
         game = play_level(i)
 

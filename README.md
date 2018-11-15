@@ -100,3 +100,19 @@ https://openclipart.org/detail/210130/inhabitants-npc-cactus
 author: glitch
 
 licence: Creative Commons Zero 1.0 Public Domain License
+
+* click sound:
+
+https://opengameart.org/content/interface-sounds-starter-pack
+
+author: p0ss
+
+licence: CC-BY-SA 3.0
+
+* start screen sound:
+
+https://opengameart.org/content/creepy-forest-f
+
+author: Augmentality (Brandon Morris)
+
+licence: CC-BY-SA 3.0
