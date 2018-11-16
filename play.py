@@ -43,24 +43,20 @@ class Pipe:
         self.end = None
         if down and up:
             self.image = load_image('pics/pipes/pipe_straight.png')
-            self.rect = self.image.get_rect(topleft = (self.x, self.y))
         elif left and right:
             self.image = load_image('pics/pipes/pipe_straight.png', 90)
-            self.rect = self.image.get_rect(topleft = (self.x, self.y))
         elif left:
             if down:
                 self.image = load_image('pics/pipes/pipe_corner.png')
-                self.rect = self.image.get_rect(topleft = (self.x, self.y))
             elif up:
                 self.image = load_image('pics/pipes/pipe_corner.png', 90)
-                self.rect = self.image.get_rect(topleft = (self.x, self.y))
         elif right:
             if down:
                 self.image = load_image('pics/pipes/pipe_corner.png', 270)
-                self.rect = self.image.get_rect(topleft = (self.x, self.y))
             elif up:
                 self.image = load_image('pics/pipes/pipe_corner.png', 180)
-                self.rect = self.image.get_rect(topleft = (self.x, self.y))
+
+        self.rect = self.image.get_rect(topleft = (self.x, self.y))
         screen = pygame.display.get_surface()
         screen.blit(self.image, (x, y))
 
@@ -98,7 +94,7 @@ class Pipe:
         screen = pygame.display.get_surface()
         water_img = load_image(water_file)
         for i in range(11):
-            pygame.time.wait(int(ANIMATION_FPS * 0.6))
+            pygame.time.wait(int(ANIMATION_FPS * 0.4))
             screen.blit(BACKGROUND, (self.x, self.y), area = self.rect)
             screen.blit(water_img, (self.x, self.y),
                         area = pygame.Rect(i * PIPE_SIZE, 0, PIPE_SIZE, PIPE_SIZE))
@@ -171,7 +167,7 @@ class Plant:
             screen.blit(new_img, (self.x, self.y))
             pygame.display.flip()
             pygame.time.wait(ANIMATION_FPS * 2)
-        pygame.time.wait(ANIMATION_FPS * 10)
+        pygame.time.wait(ANIMATION_FPS * 12)
 
         self.grown = True
 
@@ -227,7 +223,7 @@ class Button:
 def load_image(name, angle = 0):
     """
     Loads image from file and optionally rotates it by given angle.
-    Returns surface object and bounding rectangle.
+    Returns surface object.
     """
     image = pygame.image.load(name)
     if angle:
@@ -239,7 +235,7 @@ def start_point(df):
     """
     Calculates coorditates in order to center levels of different size on the screen.
     df - pandas data frame representing level
-    Returns x and y coords for start point (wheel).
+    Returns x and y coordinates for start point (wheel).
     """
     max_x, max_y = df.x.max() + 1, df.y.max() + 1
     width_blocks = SCREEN_WIDTH / PIPE_SIZE
@@ -308,7 +304,7 @@ def next_pipe(end, pipe1, obj_clickable, tap):
     end - string, one of (up, right, down, left)
     """
 
-    # find (x,y) coords required for the next pipe
+    # find (x,y) coordinates required for the next pipe
     if end == 'up':
         x = pipe1.x
         y = pipe1.y - PIPE_SIZE
@@ -373,45 +369,43 @@ def start_water(wheel, obj_clickable, tap, plant):
 
 
 def settings_bar(moves = False):
-    """Returns sound on/off button and optionally prints moves count"""
+    """Returns sound on/off button and optionally renders moves count"""
 
     screen = pygame.display.get_surface()
 
     if moves:
-        pygame.draw.rect(screen, (84, 48, 5), pygame.Rect(SCREEN_WIDTH/3 * 2, 0, SCREEN_WIDTH, 55))
+        pygame.draw.rect(screen, pygame.Color('Black'), pygame.Rect(SCREEN_WIDTH/3 * 2, 0, SCREEN_WIDTH, 55))
         Button(SCREEN_WIDTH/3 * 2 + 15, 15, 'Moves: 0', 'White', 40)
     else:
-        pygame.draw.rect(screen, (84, 48, 5), pygame.Rect(SCREEN_WIDTH/6 * 5 - 50, 0, SCREEN_WIDTH/6 + 50, 55))
+        pygame.draw.rect(screen, pygame.Color('Black'), pygame.Rect(SCREEN_WIDTH/6 * 5 - 50, 0, SCREEN_WIDTH/6 + 50, 55))
 
     if SOUND:
-        sound_button = Button(SCREEN_WIDTH/6 * 5, 15, 'Sound ON', 'White', 40)
+        sound_button = Button(SCREEN_WIDTH/6 * 5 + 45, 15, 'Sound ON', 'White', 40)
     else:
-        sound_button = Button(SCREEN_WIDTH/6 * 5, 15, 'Sound OFF', 'White', 40)
+        sound_button = Button(SCREEN_WIDTH/6 * 5 + 45, 15, 'Sound OFF', 'White', 40)
 
     return sound_button
 
 
 def add_move(moves_count):
     screen = pygame.display.get_surface()
-    pygame.draw.rect(screen, (84, 48, 5), pygame.Rect(SCREEN_WIDTH/3 * 2, 0, SCREEN_WIDTH/3/2, 55))
+    pygame.draw.rect(screen, pygame.Color('Black'), pygame.Rect(SCREEN_WIDTH/3 * 2, 0, SCREEN_WIDTH/3/2, 55))
     Button(SCREEN_WIDTH/3 * 2 + 15, 15, 'Moves: ' + str(moves_count), 'White', 40)
 
 
 def sound_on_off():
     global SOUND
     screen = pygame.display.get_surface()
+    pygame.draw.rect(screen, pygame.Color('Black'), pygame.Rect(SCREEN_WIDTH/6 * 5 - 50, 0, SCREEN_WIDTH/6 + 50, 55))
 
     if SOUND:
         pygame.mixer.music.stop()
         SOUND = False
-        pygame.draw.rect(screen, (84, 48, 5), pygame.Rect(SCREEN_WIDTH/6 * 5 - 50, 0, SCREEN_WIDTH/6 + 50, 55))
-        Button(SCREEN_WIDTH/6 * 5, 15, 'Sound OFF', 'White', 40)
-
+        Button(SCREEN_WIDTH/6 * 5 + 45, 15, 'Sound OFF', 'White', 40)
     else:
         pygame.mixer.music.play(-1)
         SOUND = True
-        pygame.draw.rect(screen, (84, 48, 5), pygame.Rect(SCREEN_WIDTH/6 * 5 - 50, 0, SCREEN_WIDTH/6 + 50, 55))
-        Button(SCREEN_WIDTH/6 * 5, 15, 'Sound ON', 'White', 40)
+        Button(SCREEN_WIDTH/6 * 5 + 45, 15, 'Sound ON', 'White', 40)
 
     pygame.display.flip()
 
@@ -427,10 +421,6 @@ def play_level(nr):
     obj_clickable, tap, plant = load_level(nr)
     sound_button = settings_bar(True)
     pygame.display.flip() # refresh display
-
-    # test
-    # pygame.time.wait(ANIMATION_FPS * 15)
-    # return True
 
     # variables
     moves_count = 0
@@ -456,7 +446,6 @@ def play_level(nr):
                             obj.rotate()
                             break
                         elif isinstance(obj, Wheel):
-                            can_click = False
                             obj.spin()
                             game = start_water(obj, obj_clickable, tap, plant)
                             running = False
@@ -539,7 +528,7 @@ def winning_screen():
 
 
 def losing_screen():
-    """Returns boolean - try again this level or not"""
+    """Returns boolean - try again this level or quit"""
     screen = pygame.display.get_surface()
     screen.fill((150, 40, 40))
 
@@ -594,6 +583,7 @@ def trophy_screen():
     screen.blit(trophy, rect)
 
     pygame.display.flip()
+    pygame.time.wait(ANIMATION_FPS * 5)
 
     # main loop
     running = True
@@ -613,7 +603,6 @@ def main():
 
     # initialize window
     pygame.init()
-    clock = pygame.time.Clock()
     logo = pygame.image.load('pics/logo.png')
     pygame.display.set_icon(logo)
     pygame.display.set_caption('Plumber')
@@ -632,6 +621,7 @@ def main():
     i = 1
     while 1 <= MAX_LEVEL:
 
+        print('Level ' + str(i))
         game = play_level(i)
 
         if game:
@@ -640,7 +630,6 @@ def main():
             next = winning_screen()
             if next:
                 i += 1
-                continue
             else:
                 pygame.quit()
                 quit()
